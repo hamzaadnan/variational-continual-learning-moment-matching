@@ -2,22 +2,34 @@
 
 This repository is a PyTorch implementation of Variational Continual Learning [1]](#1). As an additional modification in the latter experiments, the KL-divergence objective between successive weights from the original paper has been replaced by one based on moment matching. This is theoretically motivated from Wasserstein-distance minimisation. The proof is as follows:
 
-In my setup, the marginals of the joint distribution $$\gamma$$ over each set of weights ($\theta \sim q, \theta' \sim q_{t-1}$) is Gaussian:
-\begin{align*}
-    \int_\theta \gamma(\theta, \theta') \, d\theta &= q_{t-1}(\theta') = \mathcal{N}(\theta'; \mu_{t-1}, \sigma_{t-1}^2) \\ 
-    \int_\theta' \gamma(\theta, \theta') \, d\theta' &= q(\theta) = \mathcal{N}(\theta; \mu, \sigma^2)
-\end{align*}
+In my setup, the marginals of the joint distribution γ over each set of weights (θ ~ q, θ′ ~ q_{t−1}) is Gaussian:
 
-\begin{align*}
-    &\mathbb{E}_{\theta, \theta' \sim \gamma} \left[\sum_{n=1}^{N_t} -\log p(y_t^{(n)}|\theta, \mathbf{x}_t^{(n)})  + \lambda(\theta - \theta')^2 \right] \\
-    &= \iint \sum_{n=1}^{N_t} -\log p(y_t^{(n)}|\theta, \mathbf{x}_t^{(n)}) \gamma(\theta, \theta') \, d\theta' d\theta +  \lambda \mathbb{E}_{\theta, \theta' \sim \gamma} \left[\theta^2 + \theta'^2 - 2\theta \theta' \right] \\ 
-    &= \int \sum_{n=1}^{N_t} -\log p(y_t^{(n)}|\theta, \mathbf{x}_t^{(n)})q(\theta) \, d\theta + \lambda \left(\mathbb{E}_{\theta, \theta' \sim \gamma} [\theta^2] + \mathbb{E}_{\theta, \theta' \sim \gamma} [\theta'^2] - 2\mathbb{E}_{\theta, \theta' \sim \gamma}[\theta\theta'] \right) \\
-    &= \mathbb{E}_q\left[ \sum_{n=1}^{N_t} -\log p(y_t^{(n)}|\theta, \mathbf{x}_t^{(n)}) \right] + \lambda \left( (\mu^2 + \sigma^2) + (\mu_{t-1}^2 + \sigma_{t-1}^2) - 2(\rho_{\theta\theta'}\sigma\sigma_{t-1} + \mu \mu_{t-1})   \right) 
-\end{align*}
+∫_θ γ(θ, θ′) dθ     = q_{t−1}(θ′) = 𝒩(θ′; μ_{t−1}, σ_{t−1}²)  
+∫_{θ′} γ(θ, θ′) dθ′ = q(θ)       = 𝒩(θ; μ, σ²)
 
-Where the last term follows from $\rho_{XY} = \frac{\mathbb{C}\text{ov}(X, Y)}{\sigma_X\sigma_Y} = \frac{\mathbb{E}[(X - \mathbb{E[X]})(Y - \mathbb{E}[Y])]}{\sigma_X\sigma_Y}$ for two random variables $X, Y$.
+We compute the following expectation under γ:
 
-Finally, since both distributions are from the same family, for the optimisation objective of aligning them, I take the case when the correlation is 1, giving the following optimisation objective after completing the square:
+E_{θ, θ′ ~ γ} [ Σ_{n=1}^{N_t} −log p(y_t^{(n)} | θ, x_t^{(n)}) + λ(θ − θ′)² ]
+
+Expanding this:
+
+= ∬ Σ_{n=1}^{N_t} −log p(y_t^{(n)} | θ, x_t^{(n)}) γ(θ, θ′) dθ dθ′  
+  + λ E_{θ, θ′ ~ γ} [θ² + θ′² − 2θθ′]
+
+= ∫ Σ_{n=1}^{N_t} −log p(y_t^{(n)} | θ, x_t^{(n)}) q(θ) dθ  
+  + λ ( E_γ[θ²] + E_γ[θ′²] − 2E_γ[θθ′] )
+
+= E_q[ Σ_{n=1}^{N_t} −log p(y_t^{(n)} | θ, x_t^{(n)}) ]  
+  + λ [ μ² + σ² + μ_{t−1}² + σ_{t−1}² − 2(ρ_{θθ′} σ σ_{t−1} + μ μ_{t−1}) ]
+
+The last term uses the identity:
+
+ρ_{XY} = Cov(X, Y) / (σ_X σ_Y) = E[(X − E[X])(Y − E[Y])] / (σ_X σ_Y)
+
+Finally, since both distributions are from the same family, for the optimisation objective of aligning them, we take the case when the correlation is 1, giving the final objective after completing the square:
+
+E_q[ Σ_{n=1}^{N_t} −log p(y_t^{(n)} | θ, x_t^{(n)}) ]  
++ λ [ (μ − μ_{t−1})² + (σ − σ_{t−1})² ]
 
 
 
