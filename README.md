@@ -32,6 +32,5 @@ E_q[ Σ_{n=1}^{N_t} −log p(y_t^{(n)} | θ, x_t^{(n)}) ]
 + λ [ (μ − μ_{t−1})² + (σ − σ_{t−1})² ]
 
 
-
 ## References
 <a id="1">[1]</a> Nguyen, Cuong V., et al. "Variational continual learning." arXiv preprint arXiv:1710.10628 (2017).
